@@ -437,20 +437,20 @@ def getNewTransformations(baseTransformations, micPerPix, is_from_SWIFT, img_hei
 ### MICHAEL CHIRILLO'S FUNCTION ###
 def matrix2recon(transform, dim):
     """Change frame of reference for SWiFT transforms to work in Reconstruct."""
-    new_transform = copy.deepcopy(transform)
+    new_transform = transform.copy()
 
     # Calculate bottom left corner translation
     BL_corner = np.array([[0], [dim], [1]])  # BL corner from image height in px
     BL_translation = np.matmul(transform, BL_corner) - BL_corner
 
     # Add BL corner translation to SWiFT matrix
-    new_transform[0, 2] = round(BL_translation[0, 0], 5)  # x translation
-    new_transform[1, 2] = round(BL_translation[1, 0], 5)  # y translation
+    new_transform[0][2] = round(BL_translation[0][0], 5)  # x translation
+    new_transform[1][2] = round(BL_translation[1][0], 5)  # y translation
 
     # Flip y axis - change signs a2, b1, and b3
-    new_transform[0, 1] *= -1  # a2
-    new_transform[1, 0] *= -1  # b1
-    new_transform[1, 2] *= -1  # b3
+    new_transform[0][1] *= -1  # a2
+    new_transform[1][0] *= -1  # b1
+    new_transform[1][2] *= -1  # b3
 
     # Stop-gap measure for Reconchonky
     new_transform = np.linalg.inv(new_transform)
@@ -821,7 +821,7 @@ new_dir = []
 while not new_dir:
     new_dir = askdirectory(title="Select Folder")
 
-print("New working directory: " + new_dir)
+print("Working directory: " + new_dir)
 os.chdir(new_dir)
     
 # locate the series file and get series name if found
@@ -872,8 +872,6 @@ if seriesFileName:
                 print("Successfully set the uncropped series as the focus.")
 
             input("\nPress enter to select the file containing the transformations.")
-
-            is_from_SWIFT = ynInput("Is this from SWIFT output or are these the direct image transformations? (y/n): ")
             
             # open file explorer for user to select files
             root = Tk()
@@ -882,6 +880,8 @@ if seriesFileName:
             newTransFile = askopenfilename(title="Select Transformation File",
                                    filetypes=(("Data File", "*.dat"),
                                               ("All Files","*.*")))
+
+            is_from_SWIFT = ynInput("\nIs this from SWIFT output? (y/n): ")
             
             # section 0 is often the grid and does not get aligned
             startTrans = intInput("\nWhat section do the transformations start on?: ")
@@ -904,15 +904,17 @@ if seriesFileName:
 
             print(fileName + " has been saved.")
 
-            # get new transformations
-            print("Retrieving new transformations...")
-
             # get image height if needed
+            last_section_info = getSectionInfo(seriesName + "." + str(sectionNums[-1]))
+            micPerPix = last_section_info[2]
+            img_height = 0
             if is_from_SWIFT:
-                last_sec_img = PILImage.open(getSectionInfo(seriesName + "." + str(sectionNums[-1]))[3]) # open the last section image
-                img_length, img_height = last_sec_img.size # get the last section image height
-            else:
-                img_height = 0
+                try:
+                    last_sec_img = PILImage.open(last_section_info[3]) # open the last section image
+                    img_height = last_sec_img.size[1] # get the last section image height
+                except:
+                    print("\nUncropped images not found.")
+                    img_height = intInput("Please enter the height (in pixels) of the UNCROPPED images: ")
 
             new_trans = getNewTransformations(newTransFile, micPerPix, is_from_SWIFT, img_height)
 
@@ -1208,7 +1210,7 @@ else:
                                               ("All Files","*.*")))
 
             # check if transformations are meant for Reconstruct or SWIFT output
-            is_from_SWIFT = ynInput("Is this from SWIFT output or are these the direct image transformations? (y/n): ")
+            is_from_SWIFT = ynInput("\nIs this from SWIFT output? (y/n): ")
 
             # section 0 is often the grid and does not get aligned
             trans_offset = intInput("\nWhat section do the transformations start on?: ") - startSection
@@ -1298,12 +1300,11 @@ else:
                                              "Dtrans: 1 0 0 0 1 0\n")
             newTransformationsFile.close()
 
-    print("LOCAL_TRANSFORMATIONS.txt has been stored in each folder.")
+    print("\nLOCAL_TRANSFORMATIONS.txt has been stored in each folder.")
     print("Do NOT delete this file.")
 
     # if the series does have an existing transformation, apply it
     if isTrans:
-        print("\nIdentifying and storing global transformations...")
 
         all_transformations = getNewTransformations(baseTransformations, micPerPix, is_from_SWIFT, img_height_max)
 
