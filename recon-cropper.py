@@ -882,6 +882,17 @@ if seriesFileName:
                                               ("All Files","*.*")))
 
             is_from_SWIFT = ynInput("\nIs this from SWIFT output? (y/n): ")
+
+            if not is_from_SWIFT:
+                print("Each line in the trasnformation file should contain the following information:")
+                print("[section number] [six numbers indicating transformation applied to picture]")
+                print("\nFor example:")
+                print("0 1 0 0 0 1 0")
+                print("1 1.13 0.1 0.53 0 0.9 0.6")
+                print("2 1.11 0 0.51 0.01 0.92 0.9")
+                print("...")
+                print("\nPlease ensure that your file fits this format.")
+                input("\nPress enter to continue.")
             
             # section 0 is often the grid and does not get aligned
             startTrans = intInput("\nWhat section do the transformations start on?: ")
@@ -1221,10 +1232,13 @@ else:
         print("\nMicrons per pixel has been set to default value of 0.00254.")
         
         isTrans = False
-        print("\nIf you wish to apply a set of existing transformations to this series, please calibrate it first.")
-        print("You will be able to apply them using this program after calibrating the series in Reconstruct.")
+        print("\nREAD THE FOLLOWING INSTRUCTIONS:")
+        print("If you wish to apply a set of existing transformations to this series, please calibrate it first.")
+        print("When calibrating, traces can be made in any quadrant, but you MUST perform the actual calibration")
+        print("after switching back to the uncropped series. You do not need the uncropped images to calibrate.")
+        print("Then you will be able to apply transformations using this program after calibrating the series in Reconstruct.")
 
-        input("\nPress enter to crop the images.")
+        input("\nPress enter to continue crop the images.")
 
     # create each folder
     print("\nCreating folders...")
