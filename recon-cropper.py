@@ -1047,7 +1047,7 @@ if seriesFileName:
 
                     # get the original series images to make the guided crop if all images are not found
                     if not images_in_dir:
-                        input("\nPress enter to select the original series images.")
+                        input("\nPress enter to select the uncropped series images.")
 
                         # create tkinter object but don't display extra window
                         root = Tk()
