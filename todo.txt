@@ -1,0 +1,1 @@
+- On exit program, warn user if series is still focused on a crop, giving them the option to switch to uncropped series before exiting.
