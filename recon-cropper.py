@@ -208,12 +208,12 @@ def switchToUncropped(seriesName, objName):
     iDtrans_dict = checkForRealignment(seriesName, objName)
 
     # open and read the transformation file
-    localTrans = open(seriesName + "_" + objName + "/LOCAL_TRANSFORMATIONS.txt", "r")
+    localTrans = open(objName + "_LOCAL_TRANSFORMATIONS.txt", "r")
     lines = localTrans.readlines()
     localTrans.close()
 
     # create new transformation file
-    newLocalTrans = open(seriesName + "_" + objName + "/LOCAL_TRANSFORMATIONS.txt", "w")
+    newLocalTrans = open(objName + "_LOCAL_TRANSFORMATIONS.txt", "w")
 
     # store the new transformations and grab shifts for each section
     for line in lines:
@@ -249,7 +249,7 @@ def switchToCrop(seriesName, objName):
     """Switch focus from an uncropped series to a cropped one."""
     
     # open transformation files
-    localTrans = open(seriesName + "_" + objName + "/LOCAL_TRANSFORMATIONS.txt", "r")
+    localTrans = open(objName + "_LOCAL_TRANSFORMATIONS.txt", "r")
     lines = localTrans.readlines()
     localTrans.close()
 
@@ -291,7 +291,7 @@ def checkForRealignment(seriesName, objName):
 
     # open the two transformation files
     globalTransFile = open("GLOBAL_TRANSFORMATIONS.txt", "r")
-    localTransFile = open(seriesName + "_" + objName + "/LOCAL_TRANSFORMATIONS.txt", "r")
+    localTransFile = open(objName + "_LOCAL_TRANSFORMATIONS.txt", "r")
 
     # store trasnformations
     iDtransList = {}
@@ -688,120 +688,114 @@ def clearScreen():
 
 # MAIN P1: Ensuring that modules are installed in the correct place
 
-try:
-    print("Getting modules...")
+print("Getting modules...")
 
-    # default modules
-    import sys
-    import os
-    from datetime import datetime
+# default modules
+import sys
+import os
+from datetime import datetime
 
-    # boolean to keep track if module needs to be imported
-    needs_import = False
+# boolean to keep track if module needs to be imported
+needs_import = False
 
-    # find the site-packages folder to put the modules into
-    for p in sys.path:
-        if p.endswith("site-packages"):
-            module_dir = p
-            
-    # raise an error if there is no site-packages folder
-    if not module_dir:
-        raise Exception("There is no site-packages folder located on the path.")
-
-    # try to import numpy
-    try:
-        import numpy as np
-        numpy_bat = ""
-    except ModuleNotFoundError:
-        # if not found, inform user and set up batch text
-        needs_import = True
-        print("\nThe numpy module is not found in the current path.")
-        numpy_bat = "pip install numpy --target " + module_dir + "\n"
-
-    # try to import tkinter (should already be a part of python)
-    try:
-        from tkinter import *
-        from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-        tkinter_bat = ""
-    except ModuleNotFoundError:
-        # if not found, inform user and set up batch text
-        needs_import = True
-        print("\nThe tkinter module is not found in the current path.")
-        tkinter_bat = "pip install tk --target " + module_dir + "\n"
-
-    # try to import Pillow
-    try:
-        from PIL import Image as PILImage
-        PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
-        Pillow_bat = ""
-    except ModuleNotFoundError:
-        # if not found, inform user and set up batch text
-        needs_import = True
-        print("\nThe Pillow module is not found in the current path.")
-        Pillow_bat = "pip install Pillow --target " + module_dir + "\n"
-
-    # do nothing if all modules found
-    if not needs_import:
-        print("\nAll required modules have been successfully located.")
-
-    # install modules that were not found
-    else:
-
-        #ask user if they want to direct the program to the modules
-        directing = ynInput("Would you like to find the site-packages folder containing the required modules? (y/n): ")
+# find the site-packages folder to put the modules into
+for p in sys.path:
+    if p.endswith("site-packages"):
+        module_dir = p
         
-        if directing:
-            site_packages_dir = input("Please paste the path for the site-packages directory containing the required modules.")
-            sys.path.append(site_packages_dir)
+# raise an error if there is no site-packages folder
+if not module_dir:
+    raise Exception("There is no site-packages folder located on the path.")
 
-            # try to import all of the required modules again
-            try:
-                import numpy as np
-                from tkinter import *
-                from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-                from PIL import Image as PILImage
-                PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
-                print("Modules have been found.")
+# try to import numpy
+try:
+    import numpy as np
+    numpy_bat = ""
+except ModuleNotFoundError:
+    # if not found, inform user and set up batch text
+    needs_import = True
+    print("\nThe numpy module is not found in the current path.")
+    numpy_bat = "pip install numpy --target " + module_dir + "\n"
 
-            # if given folder still doesn't contain module, download them
-            except ModuleNotFoundError:
-                print("Modules were not found in provided folder.")
-                directing = False
-            
-        # download modules if user does not locate them
-        if not directing:
-            input("\nPress enter to download the modules.")
-            
-            # create the batch file
-            bat = open("InstallModules.bat", "w")
-            bat.write(numpy_bat)
-            bat.write(tkinter_bat)
-            bat.write(Pillow_bat)
-            bat.close()
+# try to import tkinter (should already be a part of python)
+try:
+    from tkinter import *
+    from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
+    tkinter_bat = ""
+except ModuleNotFoundError:
+    # if not found, inform user and set up batch text
+    needs_import = True
+    print("\nThe tkinter module is not found in the current path.")
+    tkinter_bat = "pip install tk --target " + module_dir + "\n"
 
-            # run the batch file with subprocess module
-            print("\nOpening Command Prompt to install required modules...")    
-            import subprocess
-            subprocess.call(["InstallModules.bat"])
+# try to import Pillow
+try:
+    from PIL import Image as PILImage
+    PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
+    Pillow_bat = ""
+except ModuleNotFoundError:
+    # if not found, inform user and set up batch text
+    needs_import = True
+    print("\nThe Pillow module is not found in the current path.")
+    Pillow_bat = "pip install Pillow --target " + module_dir + "\n"
 
-            # delete the batch
-            os.remove("InstallModules.bat")
+# do nothing if all modules found
+if not needs_import:
+    print("\nAll required modules have been successfully located.")
 
-            # import the modules that were just installed
-            if numpy_bat:
-                import numpy as np
-            if tkinter_bat:
-                from tkinter import *
-                from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-            if Pillow_bat:
-                from PIL import Image as PILImage
-                PILImage.MAX_IMAGE_PIXELS = None
+# install modules that were not found
+else:
+    #ask user if they want to direct the program to the modules
+    directing = ynInput("Would you like to find the site-packages folder containing the required modules? (y/n): ")
+    
+    if directing:
+        site_packages_dir = input("Please paste the path for the site-packages directory containing the required modules.")
+        sys.path.append(site_packages_dir)
 
-            print("\nThe necessary modules have been installed.")
+        # try to import all of the required modules again
+        try:
+            import numpy as np
+            from tkinter import *
+            from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
+            from PIL import Image as PILImage
+            PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
+            print("Modules have been found.")
 
-except Exception as e:
-    print(e)
+        # if given folder still doesn't contain module, download them
+        except ModuleNotFoundError:
+            print("Modules were not found in provided folder.")
+            directing = False
+        
+    # download modules if user does not locate them
+    if not directing:
+        input("\nPress enter for confirmation to automatically download the modules.")
+        
+        # create the batch file
+        bat = open("InstallModules.bat", "w")
+        bat.write(numpy_bat)
+        bat.write(tkinter_bat)
+        bat.write(Pillow_bat)
+        bat.close()
 
+        # run the batch file with subprocess module
+        print("\nOpening Command Prompt to install required modules...")    
+        import subprocess
+        subprocess.call(["InstallModules.bat"])
+
+        # delete the batch
+        os.remove("InstallModules.bat")
+
+        # import the modules that were just installed
+        if numpy_bat:
+            import numpy as np
+        if tkinter_bat:
+            from tkinter import *
+            from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
+        if Pillow_bat:
+            from PIL import Image as PILImage
+            PILImage.MAX_IMAGE_PIXELS = None
+
+        print("\nThe necessary modules have been installed.")
 
 # MAIN P2: Cropping and user interface for switching crops
     
@@ -938,13 +932,13 @@ if seriesFileName:
             reset_local_trans = ynInput("\nWould you like to reset all of the local transformations? (y/n): ")
 
             if reset_local_trans:
-                for path in os.listdir():
-                    if os.path.isdir(path) and path.startswith(seriesName + "_"):
-                        local_trans = open(path + "/LOCAL_TRANSFORMATIONS.txt", "r")
+                for file in os.listdir():
+                    if os.path.isfile(file) and "LOCAL_TRANSFORMATIONS.txt" in file:
+                        local_trans = open(file, "r")
                         lines = local_trans.readlines()
                         local_trans.close()
                         
-                        new_trans = open(path + "/LOCAL_TRANSFORMATIONS.txt", "w")
+                        new_trans = open(file, "w")
                         for line in lines:
                             if line.startswith("Dtrans:"):
                                 line = "Dtrans: 1 0 0 0 1 0\n"
@@ -1073,7 +1067,7 @@ if seriesFileName:
 
                     # create new trace files with shift domain origins
                     print("\nCreating new domain origins file...")
-                    newTransformationsFile = open(newLocation + "/LOCAL_TRANSFORMATIONS.txt", "w")
+                    newTransformationsFile = open(obj + "_LOCAL_TRANSFORMATIONS.txt", "w")
 
                     # shift the domain origins to bottom left corner of planned crop
                     for sectionNum in sectionNums:
@@ -1099,7 +1093,7 @@ if seriesFileName:
 
                     newTransformationsFile.close()
 
-                    print("LOCAL_TRANSFORMATIONS.txt has been stored.")
+                    print(obj + "_LOCAL_TRANSFORMATIONS.txt has been stored.")
                     print("Do NOT delete this file.")
 
                     print("\nCropping images around bounds...")
@@ -1301,8 +1295,8 @@ else:
     # iterate through each of the chunks to create the local transformations file
     for x in range(xchunks):
         for y in range(ychunks):
-            newTransformationsFile = open(seriesName + "_" + str(x) + "," + str(y) +
-                                         "/LOCAL_TRANSFORMATIONS.txt", "w")
+            newTransformationsFile = open(str(x) + "," + str(y) +
+                                         "_LOCAL_TRANSFORMATIONS.txt", "w")
             for i in range(len(imageFiles)):
                 
                 # shift the domain origins to bottom left corner of planned crop
@@ -1314,8 +1308,8 @@ else:
                                              "Dtrans: 1 0 0 0 1 0\n")
             newTransformationsFile.close()
 
-    print("\nLOCAL_TRANSFORMATIONS.txt has been stored in each folder.")
-    print("Do NOT delete this file.")
+    print("\nA LOCAL_TRANSFORMATIONS.txt has been stored for each quadrant.")
+    print("Do NOT delete these files.")
 
     # if the series does have an existing transformation, apply it
     if isTrans:
