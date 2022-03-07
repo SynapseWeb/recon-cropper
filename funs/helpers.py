@@ -1,5 +1,8 @@
 """Functions for recon-cropper.py."""
 
+import os
+import numpy as np
+
 
 def findBounds(fileName, obj):
     """Finds the bounds of a specified object on a single trace file."""
@@ -248,7 +251,7 @@ def switchToUncropped(seriesName, objName):
 
 def switchToCrop(seriesName, objName):
     """Switch focus from an uncropped series to a cropped one."""
-    
+
     # open transformation files
     localTrans = open(objName + "_LOCAL_TRANSFORMATIONS.txt", "r")
     lines = localTrans.readlines()
@@ -274,7 +277,7 @@ def switchToCrop(seriesName, objName):
 
         # transform all traces to saved aligment, shift origin, and change image source
         elif "Dtrans" in line:
-            
+
             # create the new alignment matrix
             Dtrans = [float(z) for z in line.split()[1:7]]
             DtransMatrix = [[Dtrans[0],Dtrans[1],Dtrans[2]],
@@ -284,9 +287,9 @@ def switchToCrop(seriesName, objName):
             # transform all the traces by the Dtrans matrix
             transformAllTraces(seriesName + "." + str(sectionNum),
                                DtransMatrix, # shift all traces by this matrix
-                               xshift_pix, yshift_pix, objName) # shift the origins change image source        
+                               xshift_pix, yshift_pix, objName) # shift the origins change image source
 
-    
+
 def checkForRealignment(seriesName, objName):
     """Check for differences in domain alignment between cropped and uncropped series."""
 
@@ -462,10 +465,12 @@ def matrix2recon(transform, dim):
 def transformAllTraces(fileName, transformation, xshift_pix, yshift_pix, objName):
     """Multiply all of the traces on a section by a transformation matrix; also chang the image domain and source."""
 
+    seriesName, sectionNum = fileName.split(".")
+
     # get section info
     sectionInfo = getSectionInfo(fileName)
     sectionNum = int(fileName[fileName.rfind(".")+1:])
-    
+
     # check if transformation is needed
     transformation = np.array(transformation)
     noTrans = np.array([[1,0,0],[0,1,0],[0,0,1]])
@@ -587,9 +592,8 @@ def getCropFocus(sectionFileName, seriesName):
     """Find the current crop focus based on the image source of the first section."""
 
     # open the section file
-    sectionFile = open(sectionFileName, "r")
-    lines = sectionFile.readlines()
-    sectionFile.close()
+    with open(sectionFileName, "r") as sectionFile:
+        lines = sectionFile.readlines()
 
     # find the image file
     lineIndex = 0
