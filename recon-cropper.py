@@ -796,6 +796,9 @@ if seriesFileName:
             newTransFile = askopenfilename(title="Select Transformation File",
                                    filetypes=(("Data File", "*.dat"),
                                               ("All Files","*.*")))
+            
+            if not newTransFile:
+                raise Exception("No file selected.")
 
             is_from_SWIFT = ynInput("\nIs this from SWIFT output? (y/n): ")
 
