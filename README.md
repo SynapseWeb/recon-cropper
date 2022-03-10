@@ -55,7 +55,7 @@
         -   The folders containing cropped image files
 
 
-# To be added
+## To be added to tutorial
 
 -   [ ] Creating a chunked series from scratch (including calibration), importing transformations
 
