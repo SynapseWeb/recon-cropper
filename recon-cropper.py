@@ -813,23 +813,24 @@ if seriesFileName:
             # section 0 is often the grid and does not get aligned
             startTrans = intInput("\nWhat section do the transformations start on?: ")
 
-            # save existing transformations and mark with date and time
-            print("\nSaving existing transformations...")
+            if "GLOBAL_TRANSFORMATIONS.txt" in os.listdir():
+                # save existing transformations and mark with date and time
+                print("\nSaving existing transformations...")
 
-            time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-            fileName = "SAVED_GLOBAL_TRANSFORMATIONS_" + time_str + ".txt"
+                fileName = "SAVED_GLOBAL_TRANSFORMATIONS_" + time_str + ".txt"
 
-            saved_trans = open(fileName, "w")
-            global_trans = open("GLOBAL_TRANSFORMATIONS.txt", "r")
+                saved_trans = open(fileName, "w")
+                global_trans = open("GLOBAL_TRANSFORMATIONS.txt", "r")
 
-            for line in global_trans.readlines():
-                saved_trans.write(line)
+                for line in global_trans.readlines():
+                    saved_trans.write(line)
 
-            saved_trans.close()
-            global_trans.close()
+                saved_trans.close()
+                global_trans.close()
 
-            print(fileName + " has been saved.")
+                print(fileName + " has been saved.")
 
             # get image height if needed
             last_section_info = getSectionInfo(seriesName + "." + str(sectionNums[-1]))
