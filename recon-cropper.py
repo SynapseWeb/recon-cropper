@@ -694,108 +694,30 @@ print("Getting modules...")
 import sys
 import os
 from datetime import datetime
+import subprocess
+import pkg_resources
+from tkinter import *
+from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
 
-# boolean to keep track if module needs to be imported
-needs_import = False
+required = {'numpy', 'pillow'}
+installed = {pkg.key for pkg in pkg_resources.working_set}
+missing = required - installed
 
-# find the site-packages folder to put the modules into
-for p in sys.path:
-    if p.endswith("site-packages"):
-        module_dir = p
-        
-# raise an error if there is no site-packages folder
-if not module_dir:
-    raise Exception("There is no site-packages folder located on the path.")
+if missing:
+    print("\nThe following modules were not found:")
+    for mod in missing:
+        print("-", mod)
+    input("\nPress enter to install these modules.")
+    python = sys.executable
+    subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
 
-# try to import numpy
-try:
-    import numpy as np
-    numpy_bat = ""
-except ModuleNotFoundError:
-    # if not found, inform user and set up batch text
-    needs_import = True
-    print("\nThe numpy module is not found in the current path.")
-    numpy_bat = "pip install numpy --target " + module_dir + "\n"
+import numpy as np
+from PIL import Image as PILImage
 
-# try to import tkinter (should already be a part of python)
-try:
-    from tkinter import *
-    from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-    tkinter_bat = ""
-except ModuleNotFoundError:
-    # if not found, inform user and set up batch text
-    needs_import = True
-    print("\nThe tkinter module is not found in the current path.")
-    tkinter_bat = "pip install tk --target " + module_dir + "\n"
-
-# try to import Pillow
-try:
-    from PIL import Image as PILImage
-    PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
-    Pillow_bat = ""
-except ModuleNotFoundError:
-    # if not found, inform user and set up batch text
-    needs_import = True
-    print("\nThe Pillow module is not found in the current path.")
-    Pillow_bat = "pip install Pillow --target " + module_dir + "\n"
-
-# do nothing if all modules found
-if not needs_import:
-    print("\nAll required modules have been successfully located.")
-
-# install modules that were not found
+if missing:
+    print("\nModules successfully installed.")
 else:
-    #ask user if they want to direct the program to the modules
-    directing = ynInput("Would you like to find the site-packages folder containing the required modules? (y/n): ")
-    
-    if directing:
-        site_packages_dir = input("Please paste the path for the site-packages directory containing the required modules.")
-        sys.path.append(site_packages_dir)
-
-        # try to import all of the required modules again
-        try:
-            import numpy as np
-            from tkinter import *
-            from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-            from PIL import Image as PILImage
-            PILImage.MAX_IMAGE_PIXELS = None # turn off image size restriction
-            print("Modules have been found.")
-
-        # if given folder still doesn't contain module, download them
-        except ModuleNotFoundError:
-            print("Modules were not found in provided folder.")
-            directing = False
-        
-    # download modules if user does not locate them
-    if not directing:
-        input("\nPress enter for confirmation to automatically download the modules.")
-        
-        # create the batch file
-        bat = open("InstallModules.bat", "w")
-        bat.write(numpy_bat)
-        bat.write(tkinter_bat)
-        bat.write(Pillow_bat)
-        bat.close()
-
-        # run the batch file with subprocess module
-        print("\nOpening Command Prompt to install required modules...")    
-        import subprocess
-        subprocess.call(["InstallModules.bat"])
-
-        # delete the batch
-        os.remove("InstallModules.bat")
-
-        # import the modules that were just installed
-        if numpy_bat:
-            import numpy as np
-        if tkinter_bat:
-            from tkinter import *
-            from tkinter.filedialog import askopenfilename, askopenfilenames, askdirectory
-        if Pillow_bat:
-            from PIL import Image as PILImage
-            PILImage.MAX_IMAGE_PIXELS = None
-
-        print("\nThe necessary modules have been installed.")
+    print("All modules have been found.")
 
 # MAIN P2: Cropping and user interface for switching crops
     
