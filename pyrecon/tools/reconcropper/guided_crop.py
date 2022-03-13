@@ -1,13 +1,14 @@
 import os
-from explore_files import findFiles
-from get_input import floatInput
+from .explore_files import findFiles
+from .get_input import floatInput
 from PIL import Image as PILImage
 
 def findBounds(series, obj_name):
     """Finds the bounds of a specified object on a single section file.
     """
     all_bounds = {}
-    for section in series.sections:
+    for section_num in series.sections:
+        section = series.sections[section_num]
         # obtain list of all contours with obj_name
         all_contours = []
         for contour in section.contours:
@@ -20,10 +21,11 @@ def findBounds(series, obj_name):
         all_points = []
         for contour in all_contours:
             fixed_points = contour.transform.transformPoints(contour.points)
-            all_points += fixed_points
+            for point in fixed_points:
+                all_points.append(point)
         # get the domain transformation and inverse transformation
         domain_tform = section.images[0].transform # ASSUMES A SINGLE DOMAIN IMAGE
-        domain_itform = domain_tform.inverse()
+        domain_itform = domain_tform.invert()
         # compile points transformed by domain inverse transformation (ditform)
         all_points_ditform = domain_itform.transformPoints(all_points)
         x_vals = []
@@ -79,7 +81,8 @@ def guidedCrop(series, obj_name, tform_data):
 
     # check if section images are all in the directory
     images_in_dir = True
-    for section in series.sections:
+    for section_num in series.sections:
+        section = series.sections[section_num]
         src = section.images[0].src
         images_in_dir = images_in_dir and os.path.isfile(src)
     images_dict = {}
@@ -90,18 +93,20 @@ def guidedCrop(series, obj_name, tform_data):
         # open file explorer for user to select the image files
         image_files = sorted(findFiles("Image Files", "tif"))
         # check if number of sections matches number of images selected
-        if series.sections != len(image_files):
+        if len(series.sections) != len(image_files):
             raise Exception("Number of images selected does not match number of sections.")
         # pair the images to the sections based on order
         name_list = []
-        for section in series.sections:
+        for section_num in series.sections:
+            section = series.sections[section_num]
             name_list.append(section.name)
         name_list.sort()
         for i in range(len(name_list)):
             images_dict[name_list[i]] = image_files[i]
     # otherwise, use given src data
     else:
-        for section in series.sections:
+        for section_num in series.sections:
+            section = series.sections[section_num]
             images_dict[section.name] = section.images[0].src
 
     
@@ -118,7 +123,8 @@ def guidedCrop(series, obj_name, tform_data):
     tform_data["LOCAL_" + obj_name] = {}
 
     # shift the domain origins to bottom left corner of planned crop
-    for section in series.sections:
+    for section_num in series.sections:
+        section = series.sections[section_num]
         print("Working on", section.name + "...")
         # set up the tform_data file
         tform_data["LOCAL_" + obj_name][section.name] = {}
@@ -126,7 +132,7 @@ def guidedCrop(series, obj_name, tform_data):
         # fix the coordinates to the picture
         global_tform = section.images[0].transform
         xmin, xmax, ymin, ymax = bounds_dict[section.name]
-        min_max_coords = global_tform.inverse().transformPoints([(xmin, ymin), (xmax, ymax)])
+        min_max_coords = global_tform.invert().transformPoints([(xmin, ymin), (xmax, ymax)])
         # translate coordinates to pixels
         pixPerMic = 1.0 / section.images[0].mag # get image magnification
         xshift_pix = int((min_max_coords[0][0] - rad) * pixPerMic)
@@ -141,7 +147,7 @@ def guidedCrop(series, obj_name, tform_data):
         tform_data["LOCAL_" + obj_name][section.name]["yshift_pix"] = yshift_pix
         # write identity transformation as Delta transformation
         tform_data["LOCAL_" + obj_name][section.name]["xcoef"] = [0,1,0,0,0,0]
-        tform_data["LOCAL_" + obj_name][section.name]["xcoef"] = [0,0,1,0,0,0]
+        tform_data["LOCAL_" + obj_name][section.name]["ycoef"] = [0,0,1,0,0,0]
 
         # get the name/path of the desired image file from dictionary
         file_path = images_dict[section.name]

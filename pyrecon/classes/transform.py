@@ -185,10 +185,22 @@ class Transform(object):
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
             return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
-  
+    
+    def noTranslation(self):
+        if self.isAffine():
+            a = self._tform.params
+            a[0,2] = 0
+            a[1,2] = 0
+            a = np.linalg.inv(a)
+            xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
+            ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
+            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
+        
 
-    def translate(self, x, y):
+    def translate(self, x, y, strict=False):
         """ Return the transform translated by x, y.
+        If translation is strict, x and y are directly addd to transform.
+        If translation is not strict, x and y are transformed and then added.
         """
         if self.isAffine():
             # use matrix if affine
@@ -198,7 +210,9 @@ class Transform(object):
             a = np.linalg.inv(tform)
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
+            return Transform(xcoef=xcoef, ycoef=ycoef)
+
+
 ##        else:
 ##            # use polynomial transform if non-affine
 ##            tform = self._tform.params

@@ -9,27 +9,28 @@ def newJSON(series):
     tform_data = {}
     tform_data["GLOBAL"] = {}
     tform_data["FOCUS"] = "GLOBAL"
-    for section in series.sections:
+    print(series.sections)
+    for section_num in series.sections:
+        section = series.sections[section_num]
         tform_data["GLOBAL"][section.name] = {}
         tform_data["GLOBAL"][section.name]["xcoef"] = section.images[0].transform.xcoef
         tform_data["GLOBAL"][section.name]["ycoef"] = section.images[0].transform.ycoef
         tform_data["GLOBAL"][section.name]["src"] = section.images[0].src
-    new_file = open("tform_data.json", "w")
+    new_file = open("data.json", "w")
     json.dump(tform_data, new_file)
     new_file.close()
     return tform_data
 
 
-def readAll(series_path):
+def readAll(series_dir):
     """ Import series and tform data.
     """
-    series = rr.process_series_directory(series_path)
-    working_dir = series_path[:series_path.rfind("/")]
-    os.chdir(working_dir)
-    if not os.path.isfile("tform_data.json"):
+    series = rr.process_series_directory(series_dir)
+    os.chdir(series_dir)
+    if not os.path.isfile("data.json"):
         tform_data = newJSON(series)
     else:
-        data_file = open("tform_data.json", "r")
+        data_file = open("data.json", "r")
         tform_data = json.load(data_file)
         data_file.close()
     return series, tform_data
@@ -38,7 +39,7 @@ def writeAll(series, tform_data):
     """ Export series and tform data to saved files.
     """
     directory = os.getcwd()
-    rw.write_series(series, directory)
-    new_file = open("tform_data.json", "w")
+    rw.write_series(series, directory, sections=True, overwrite=True)
+    new_file = open("data.json", "w")
     json.dump(tform_data, new_file)
     new_file.close()

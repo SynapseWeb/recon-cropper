@@ -1,5 +1,5 @@
 import numpy
-#from shapely.geometry import LineString, Point, Polygon
+# from shapely.geometry import LineString, Point, Polygon
 
 
 class Contour(object):

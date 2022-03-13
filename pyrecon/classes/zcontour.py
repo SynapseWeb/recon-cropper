@@ -1,5 +1,5 @@
 import numpy
-from shapely.geometry import LineString, Polygon
+# from shapely.geometry import LineString, Polygon
 
 
 class ZContour(object):
@@ -30,16 +30,16 @@ class ZContour(object):
         """
         return not self.__eq__(other)
 
-    @property
-    def shape(self):
-        """ Return a Shapely geometric object.
-        """
-        if not self.points:
-            raise Exception("No points found: {}".format(self))
-
-        array = numpy.asarray(self.points)
-
-        # Normalize points
-        if len(array) == 2:
-            return LineString(array)
-        return Polygon(array)
+##    @property
+##   def shape(self):
+##        """ Return a Shapely geometric object.
+##        """
+##        if not self.points:
+##            raise Exception("No points found: {}".format(self))
+##
+##        array = numpy.asarray(self.points)
+##
+##        # Normalize points
+##        if len(array) == 2:
+##            return LineString(array)
+##        return Polygon(array)

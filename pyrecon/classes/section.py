@@ -61,14 +61,11 @@ class Section(object):
             "alignLocked": self.alignLocked
         }
     
-    def transformAllContours(self, tform=None, xshift=0, yshift=0):
+    def transformAllContours(self, tform):
         """Transform/translate all traces on a single section.
         """
         for contour in self.contours:
-            if tform:
-                contour.transform = contour.transform.compose(tform)
-            if xshift or yshift:
-                contour.transform = contour.transform.translate(xshift, yshift)
+            contour.transform = contour.transform.compose(tform)
 
     def transformAllImages(self, tform=None, xshift=0, yshift=0):
         """Transform/translate all the images for a single section.
@@ -78,3 +75,4 @@ class Section(object):
                 image.transform = image.transform.compose(tform)
             if xshift or yshift:
                 image.transform = image.transform.translate(xshift, yshift)
+            

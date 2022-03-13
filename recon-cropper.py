@@ -1,6 +1,6 @@
 # MAIN P1: Ensuring that modules are installed in the correct place
 
-print("Getting modules...")
+print("Loading modules...")
 
 # default modules
 import os
@@ -8,12 +8,7 @@ import sys
 import subprocess
 import pkg_resources
 
-# custom modules
-from pyrecon.tools.reconcropper.explore_files import findFile
-from pyrecon.tools.reconcropper.update import readAll, writeAll
-from pyrecon.tools.reconcropper.switch import switchToGlobal, switchToCrop
-from pyrecon.tools.reconcropper.guided_crop import guidedCrop
-
+# installable modules
 required = {'numpy', 'pillow', 'scikit-image', 'lxml'}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
@@ -24,9 +19,18 @@ if missing:
         print("-", mod)
     input("\nPress enter to install these modules.")
     python = sys.executable
+    subprocess.check_call([python, '-m', 'pip', 'install', "--upgrade", "pip"], stdout=subprocess.DEVNULL)
     subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
 
-# MAIN P2: Executing the program
+# custom modules
+from pyrecon.tools.reconcropper.explore_files import findFile
+from pyrecon.tools.reconcropper.update import readAll, writeAll
+from pyrecon.tools.reconcropper.switch import switchToGlobal, switchToCrop
+from pyrecon.tools.reconcropper.guided_crop import guidedCrop
+
+print("\nModules successfully loaded.")
+
+# MAIN P2: Cropping and user interface for switching crops
 
 # function for clearing output
 def clearScreen():
@@ -39,24 +43,22 @@ def clearScreen():
     # for mac and linux(here, os.name is 'posix')
     else:
         _ = os.system('clear')
-
-# MAIN P2: Cropping and user interface for switching crops
     
 print("\nPlease ensure that Reconstruct is closed before running this program.")
-input("Press enter to continue.")
 
 # prompt user to select series file
-input("\nPress enter to select the series file.")
+input("\nPress enter to continue and select the series file.")
 series_path = findFile("Series File", "ser")
+series_dir = series_path[:series_path.rfind("/")]
 
 # read from series file
 print("\nLoading series data...")
-series, tform_data = readAll(series_path)
+series, tform_data = readAll(series_dir)
 
 # open the menu
 master_choice = " "
 while master_choice != "":
-    clearScreen()
+    #clearScreen()
 
     print("\n----------------------------MENU----------------------------")
 
@@ -77,15 +79,15 @@ while master_choice != "":
         if focus == "GLOBAL":
             print("\nThe focus is already set to the uncropped images.")
         else:
-            print("Switching to uncropped series...")
+            print("\nSwitching to uncropped series...")
             switchToGlobal(series, focus_obj_name, tform_data)
-            print("Writing data to files...")
+            print("\nWriting data to files...")
             writeAll(series, tform_data)
             print("\nSuccess!")
     
     elif master_choice == "2":
         new_obj_name = input("\nPlease enter the name of the object you would like to focus on: ")
-        if new_obj_name == focus_obj_name:
+        if focus != "GLOBAL" and new_obj_name == focus_obj_name:
             print("\nThe focus is already set to this object.")
         else:
             crop_found = False
@@ -128,4 +130,8 @@ while master_choice != "":
             writeAll(series, tform_data)
             print("\nSuccess!")
 
+    elif master_choice:
+        print("\nThat is not a valid option.")
 
+    if master_choice != "":
+        input("\nPress enter to return to the menu.")
