@@ -16,9 +16,8 @@ def newJSON(series):
         tform_data["GLOBAL"][section.name]["xcoef"] = section.images[0].transform.xcoef
         tform_data["GLOBAL"][section.name]["ycoef"] = section.images[0].transform.ycoef
         tform_data["GLOBAL"][section.name]["src"] = section.images[0].src
-    new_file = open("data.json", "w")
-    json.dump(tform_data, new_file)
-    new_file.close()
+    with open("data.json", "w") as new_file:
+        json.dump(tform_data, new_file)
     return tform_data
 
 
@@ -26,12 +25,11 @@ def readAll(series_dir):
     """ Import series and tform data.
     """
     series = rr.process_series_directory(series_dir)
-    os.chdir(series_dir)
     if not os.path.isfile("data.json"):
         tform_data = newJSON(series)
     else:
-        data_file = open("data.json", "r")
-        tform_data = json.load(data_file)
+        with open("data.json", "r") as data_file:
+            tform_data = json.load(data_file)
         data_file.close()
     return series, tform_data
 
@@ -40,6 +38,6 @@ def writeAll(series, tform_data):
     """
     directory = os.getcwd()
     rw.write_series(series, directory, sections=True, overwrite=True)
-    new_file = open("data.json", "w")
-    json.dump(tform_data, new_file)
+    with open("data.json", "w") as new_file:
+        json.dump(tform_data, new_file)
     new_file.close()

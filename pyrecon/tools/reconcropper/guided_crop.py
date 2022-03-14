@@ -134,11 +134,11 @@ def guidedCrop(series, obj_name, tform_data):
         xmin, xmax, ymin, ymax = bounds_dict[section.name]
         min_max_coords = global_tform.invert().transformPoints([(xmin, ymin), (xmax, ymax)])
         # translate coordinates to pixels
-        pixPerMic = 1.0 / section.images[0].mag # get image magnification
-        xshift_pix = int((min_max_coords[0][0] - rad) * pixPerMic)
+        pix_per_mic = 1.0 / section.images[0].mag # get image magnification
+        xshift_pix = int((min_max_coords[0][0] - rad) * pix_per_mic)
         if xshift_pix < 0:
             xshift_pix = 0
-        yshift_pix = int((min_max_coords[0][1] - rad) * pixPerMic)
+        yshift_pix = int((min_max_coords[0][1] - rad) * pix_per_mic)
         if yshift_pix < 0:
             yshift_pix = 0
 
@@ -160,10 +160,10 @@ def guidedCrop(series, obj_name, tform_data):
         img_length, img_height = img.size
 
         # get the pixel coordinates for each corner of the crop
-        left = int((min_max_coords[0][0] - rad) * pixPerMic)
-        bottom = img_height - int((min_max_coords[0][1] - rad) * pixPerMic)
-        right = int((min_max_coords[1][0] + rad) * pixPerMic)
-        top = img_height - int((min_max_coords[1][1] + rad) * pixPerMic)
+        left = int((min_max_coords[0][0] - rad) * pix_per_mic)
+        bottom = img_height - int((min_max_coords[0][1] - rad) * pix_per_mic)
+        right = int((min_max_coords[1][0] + rad) * pix_per_mic)
+        top = img_height - int((min_max_coords[1][1] + rad) * pix_per_mic)
         
         # if crop exceeds image boundary, cut it off
         if left < 0: left = 0

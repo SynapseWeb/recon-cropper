@@ -5,6 +5,7 @@ print("Loading modules...")
 # default modules
 import os
 import sys
+import json
 import subprocess
 import pkg_resources
 
@@ -23,10 +24,13 @@ if missing:
     subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
 
 # custom modules
-from pyrecon.tools.reconcropper.explore_files import findFile
+from pyrecon.tools.reconcropper.get_input import ynInput
+from pyrecon.tools.reconcropper.explore_files import findDir
 from pyrecon.tools.reconcropper.update import readAll, writeAll
 from pyrecon.tools.reconcropper.switch import switchToGlobal, switchToCrop
 from pyrecon.tools.reconcropper.guided_crop import guidedCrop
+from pyrecon.tools.reconcropper.chunk_crop import newChunkCrop
+from pyrecon.tools.reconcropper.import_transforms import changeGlobalTransformations
 
 print("\nModules successfully loaded.")
 
@@ -46,14 +50,44 @@ def clearScreen():
     
 print("\nPlease ensure that Reconstruct is closed before running this program.")
 
-# prompt user to select series file
-input("\nPress enter to continue and select the series file.")
-series_path = findFile("Series File", "ser")
-series_dir = series_path[:series_path.rfind("/")]
+if os.path.isfile("save.json"):
+    # load previous working directory
+    with open("save.json", "r") as save_file:
+        save_data = json.load(save_file)
+    series_dir = save_data["lastdir"]
+    print("\nThe last folder you worked on is:")
+    print(series_dir)
+    keep_dir = ynInput("\nWould you like to keep working on this folder? (y/n): ")
+else:
+    save_data = {}
+    keep_dir = False
+if not keep_dir:
+    # prompt user to select series file
+    print("\nPress enter to select the folder containing the series file.")
+    input("(select an empty folder if you wish to create a new chunked series)")
+    series_dir = findDir()
+original_dir = os.getcwd()
+os.chdir(series_dir)
+print("\nLocating series file...")
+series_found = False
+for file in os.listdir("."):
+    if file.endswith(".ser"):
+        series_found = True
+        series_path = file
+
+# create a chunked series if there is no series file
+if not series_found:
+    print("\nNo series file was found in this folder.")
+    input("Press enter to create a chunked series.")
+    newChunkCrop()
+    input("Press enter to continue.")
 
 # read from series file
 print("\nLoading series data...")
 series, tform_data = readAll(series_dir)
+
+# check if the series has been chunked
+is_chunked = "LOCAL_0,0" in list(tform_data.keys())
 
 # open the menu
 master_choice = " "
@@ -61,6 +95,7 @@ while master_choice != "":
     #clearScreen()
 
     print("\n----------------------------MENU----------------------------")
+    print("\nCurrent working directory:\n" + series_dir)
 
     focus = tform_data["FOCUS"]
     if focus == "GLOBAL":
@@ -71,8 +106,11 @@ while master_choice != "":
     
     print("\nPlease select from the following options:")
     print("1: Switch to the uncropped set of images")
-    print("2: Switch to an existing set of images cropped around an object")
+    print("2: Switch to an existing chunk or object crop")
     print("3: Create a new guided crop around a RECONSTRUCT object")
+    print("4: Divide series into chunks [NOT IMPLEMENTED YET]")
+    print("5: Import new transformations")
+    print("0: Change folders")
     master_choice = input("\nEnter your menu choice (or press enter to exit): ")
 
     if master_choice == "1":
@@ -83,12 +121,16 @@ while master_choice != "":
             switchToGlobal(series, focus_obj_name, tform_data)
             print("\nWriting data to files...")
             writeAll(series, tform_data)
-            print("\nSuccess!")
+            print("Success!")
     
     elif master_choice == "2":
-        new_obj_name = input("\nPlease enter the name of the object you would like to focus on: ")
+        print("\nPlease enter the name of the crop you would like to focus on.")
+        print("- for object crops, enter the name of the object")
+        if is_chunked:
+            print("- for chunks, enter the coordinates as x,y with no space or parentheses")
+        new_obj_name = input("Enter here: ")
         if focus != "GLOBAL" and new_obj_name == focus_obj_name:
-            print("\nThe focus is already set to this object.")
+            print("\nThe focus is already set to this crop.")
         else:
             crop_found = False
             try:
@@ -107,7 +149,7 @@ while master_choice != "":
                 switchToCrop(series, new_obj_name, tform_data)
                 print("\nWriting data to files...")
                 writeAll(series, tform_data)
-                print("\nSuccess!")
+                print("Success!")
     
     elif master_choice == "3":
         new_obj_name = input("\nPlease enter the name of the object you would like to crop around: ")
@@ -128,10 +170,49 @@ while master_choice != "":
             switchToCrop(series, new_obj_name, tform_data)
             print("\nWriting data to files...")
             writeAll(series, tform_data)
-            print("\nSuccess!")
+            print("Success!")
+    
+    elif master_choice == "5":
+        if focus != "GLOBAL":
+            print("\nSwitching to the uncropped series to prepare...")
+            switchToGlobal(series, focus_obj_name, tform_data)
+            print("Success!")
+        changeGlobalTransformations(series, tform_data)
+        print("\nWriting data to files...")
+        writeAll(series, tform_data)
+        print("Success!")
+    
+    elif master_choice == "0":
+        series_found = False
+        while series_found == False:
+            input("\nPress enter to select the folder containing the series file.")
+            series_dir = findDir()
+            os.chdir(series_dir)
+            print("\nLocating series file...")
+            series_found = False
+            for file in os.listdir("."):
+                if file.endswith(".ser"):
+                    series_found = True
+            if series_found:
+                print("\nLoading series data...")
+                series, tform_data = readAll(series_dir)
+                is_chunked = "LOCAL_0,0" in list(tform_data.keys())
+                print("Success!")
+            else:
+                print("\nPlease select a folder that contains a series.")
 
+        
     elif master_choice:
         print("\nThat is not a valid option.")
 
     if master_choice != "":
         input("\nPress enter to return to the menu.")
+
+# save the working directory
+print("\nSaving workspace data...")
+save_data["lastdir"] = os.getcwd()
+with open(original_dir + "/save.json", "w") as save_file:
+    json.dump(save_data, save_file)
+print("Success!")
+
+print("\nGoodbye! :)")

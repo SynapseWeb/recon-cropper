@@ -156,7 +156,7 @@ class Transform(object):
             a = np.linalg.inv(combined_tform.params)
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
+            return Transform(xcoef=xcoef, ycoef=ycoef)
 ##        else:
 ##            # simulate points for non-affine transformations
 ##            points = []
@@ -184,7 +184,7 @@ class Transform(object):
             a = self._tform.params
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
+            return Transform(xcoef=xcoef, ycoef=ycoef)
     
     def noTranslation(self):
         if self.isAffine():
@@ -194,8 +194,17 @@ class Transform(object):
             a = np.linalg.inv(a)
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
-        
+            return Transform(xcoef=xcoef, ycoef=ycoef)
+
+    def scaleTranslation(self, factor):
+        if self.isAffine():
+            tform = self._tform.params
+            tform[0,2] *= factor
+            tform[1,2] *= factor
+            a = np.linalg.inv(tform)
+            xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
+            ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
+            return Transform(xcoef=xcoef, ycoef=ycoef)
 
     def translate(self, x, y, strict=False):
         """ Return the transform translated by x, y.

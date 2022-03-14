@@ -62,7 +62,7 @@ class Section(object):
         }
     
     def transformAllContours(self, tform):
-        """Transform/translate all traces on a single section.
+        """Transform all traces on a single section.
         """
         for contour in self.contours:
             contour.transform = contour.transform.compose(tform)
