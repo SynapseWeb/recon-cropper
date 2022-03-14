@@ -1,2 +1,8 @@
+# Ignore all org backups
 *.org
+
+# Ignore python caching files
+__pycache__/
+
+# Other stuff
 save.json
