@@ -43,7 +43,7 @@ def changeGlobalTransformations(series, tform_data):
             idx_to_num[i] = sec_nums[i + start_idx]
     
     # ask user to keep or reset local transformations
-    reset_local = ynInput("Would you like to reset your local transformations? (y/n): ")
+    reset_local = ynInput("\nWould you like to reset your local transformations? (y/n): ")
 
     print("\nRetrieving transformations...")
 
@@ -70,37 +70,35 @@ def changeGlobalTransformations(series, tform_data):
         new_global_tform = all_tforms[i]
 
         # get the difference between the current and new transform (Dtform)
-        Dtform = current_global_tform.invert().compose(new_global_tform)
+        change = current_global_tform.invert().compose(new_global_tform)
 
         # transform all of the traces AND the domain by the change transformation
-        section.transformAllContours(Dtform)
-        section.transformAllImages(Dtform)
+        section.transformAllContours(change)
+        section.transformAllImages(change)
 
-        # change local transformations as requested
-        for crop in tform_data:
-            if "LOCAL_" in crop:
-                for section_num in series.sections:
-                    section = series.sections[section_num]
-                    if reset_local:
-                        # reset local transformations
-                        tform_data[crop][section.name]["xcoef"] = [0,1,0,0,0,0]
-                        tform_data[crop][section.name]["ycoef"] = [0,0,1,0,0,0]
-                    else:
-                        # undo new transformation on local crops to preserve transformation
-                        local_xcoef = tform_data[crop][section.name]["xcoef"]
-                        local_ycoef = tform_data[crop][section.name]["ycoef"]
-                        local_tform = Transform(xcoef=local_xcoef, ycoef=local_ycoef)
-                        new_local_tform = Dtform.invert().compose(local_tform)
-                        tform_data[crop][section.name]["xcoef"] = new_local_tform.xcoef
-                        tform_data[crop][section.name]["ycoef"] = new_local_tform.ycoef
-    
-    # upate JSON GLBOAL tform_data
-    for section_num in series.sections:
-        section = series.sections[section_num]
+        # update JSON GLOBAL tform_data
         new_xcoef = section.images[0].transform.xcoef
         new_ycoef = section.images[0].transform.ycoef
         tform_data["GLOBAL"][section.name]["xcoef"] = new_xcoef
         tform_data["GLOBAL"][section.name]["ycoef"] = new_ycoef
+
+        # change local transformations as requested
+        for crop in tform_data:
+            if "LOCAL_" in crop:
+                if reset_local:
+                    # reset local transformations in JSON
+                    tform_data[crop][section.name]["xcoef"] = [0,1,0,0,0,0]
+                    tform_data[crop][section.name]["ycoef"] = [0,0,1,0,0,0]
+                else:
+                    # undo new transformation on local crops to preserve transformation
+                    local_xcoef = tform_data[crop][section.name]["xcoef"]
+                    local_ycoef = tform_data[crop][section.name]["ycoef"]
+                    local_Dtform = Transform(xcoef=local_xcoef, ycoef=local_ycoef)
+                    new_local_Dtform = change.invert().compose(local_Dtform)
+                    # update local transformations in JSON file
+                    tform_data[crop][section.name]["xcoef"] = new_local_Dtform.xcoef
+                    tform_data[crop][section.name]["ycoef"] = new_local_Dtform.ycoef
+        
     print("Success!")        
 
 def getNewTransformations(new_tforms_file, mag_list, is_from_SWIFT=False, img_height_list=[]):

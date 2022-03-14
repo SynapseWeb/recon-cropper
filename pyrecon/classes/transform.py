@@ -101,7 +101,11 @@ def get_skimage_transform(xcoef=None, ycoef=None, dim=None):
 
 class Transform(object):
     """ Class representing a RECONSTRUCT Transform.
-    """        
+    """
+    # STATIC METHOD
+    def getTranslateTransform(xshift, yshift):
+        """Return a transform for the given translation"""
+        return Transform(xcoef=[-xshift,1,0,0,0,0], ycoef=[-yshift,0,1,0,0,0])
 
     def __init__(self, **kwargs):
         """ Assign instance attributes to provided args/kwargs.

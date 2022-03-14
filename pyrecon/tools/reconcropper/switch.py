@@ -11,21 +11,17 @@ def findRealignment(series, local_name, tform_data):
         xshift_pix = tform_data["LOCAL_" + local_name][section.name]["xshift_pix"]
         yshift_pix = tform_data["LOCAL_" + local_name][section.name]["yshift_pix"]
         mag = section.images[0].mag
-        shift_point = section.images[0].transform.noTranslation().transformPoints([(xshift_pix * mag, yshift_pix * mag)])
-        xshift = shift_point[0][0]
-        yshift = shift_point[0][1]
-        # undo the translate on the current local image tform
-        section.transformAllImages(tform=None, xshift= -xshift, yshift= -yshift)
-        # get global transform
+        translate = Transform.getTranslateTransform(xshift_pix * mag, yshift_pix * mag)
+        # get local and global transforms
+        local_tform = section.images[0].transform
         global_xcoef = tform_data["GLOBAL"][section.name]["xcoef"]
         global_ycoef = tform_data["GLOBAL"][section.name]["ycoef"]
         global_tform = Transform(xcoef=global_xcoef, ycoef=global_ycoef)
-        # get the Dtform (current_tform - global_tform)
-        Dtform = global_tform.invert().compose(section.images[0].transform)
+        # get the Dtform
+        # Dtform = -(translate + global) + local
+        Dtform = (translate.compose(global_tform)).invert().compose(local_tform)
         # store in dictionary
-        Dtforms[section.name] = Dtform
-        # redo the translate on the current local image tform
-        section.transformAllImages(tform=None, xshift=xshift, yshift=yshift)
+        Dtforms[section.name] = Dtform, translate # also get translate so it is not recalculated later
     return Dtforms
 
 def saveAsGlobal(series, tform_data):
@@ -42,20 +38,16 @@ def switchToGlobal(series, obj_name, tform_data):
     Dtforms = findRealignment(series, obj_name, tform_data)
     for section_num in series.sections:
         section = series.sections[section_num]
-        Dtform = Dtforms[section.name]
-        # get the translation coordinates
-        xshift_pix = tform_data["LOCAL_" + obj_name][section.name]["xshift_pix"]
-        yshift_pix = tform_data["LOCAL_" + obj_name][section.name]["yshift_pix"]
-        mag = section.images[0].mag
-        shift_point = section.images[0].transform.noTranslation().transformPoints([(xshift_pix * mag, yshift_pix * mag)])
-        xshift = shift_point[0][0]
-        yshift = shift_point[0][1]        
+        Dtform, translate = Dtforms[section.name]        
         # store the new Delta transformation in tform_data
         tform_data["LOCAL_" + obj_name][section.name]["xcoef"] = Dtform.xcoef
         tform_data["LOCAL_" + obj_name][section.name]["ycoef"] = Dtform.ycoef
         # change the transformations
+        # CONTOURS: global = local + -Dtform
         section.transformAllContours(Dtform.invert())
-        section.transformAllImages(Dtform.invert(), -xshift, -yshift)
+        # IMAGES: global = -translate + (local + -Dtform)
+        section.transformAllImages(Dtform.invert())
+        section.transformAllImages(translate.invert(), reverse=True)
         # change the image source
         section.images[0].src = tform_data["GLOBAL"][section.name]["src"]
         tform_data["FOCUS"] = "GLOBAL"
@@ -74,14 +66,12 @@ def switchToCrop(series, obj_name, tform_data):
         xshift_pix = tform_data["LOCAL_" + obj_name][section.name]["xshift_pix"]
         yshift_pix = tform_data["LOCAL_" + obj_name][section.name]["yshift_pix"]
         mag = section.images[0].mag
-        global_tform = section.images[0].transform
-        shift_point = global_tform.noTranslation().transformPoints([(xshift_pix * mag, yshift_pix * mag)])
-        xshift = shift_point[0][0]
-        yshift = shift_point[0][1] 
-        # transform all contours by Dtform
+        translate = Transform.getTranslateTransform(xshift_pix * mag, yshift_pix * mag)
+        # CONTOURS: local = global + Dtform
         section.transformAllContours(Dtform)
-        # transform and translate all image transforms
-        section.transformAllImages(Dtform, xshift, yshift)
+        # IMAGES: local = (translate + global) + Dtform 
+        section.transformAllImages(translate, reverse=True)
+        section.transformAllImages(Dtform)
         # change the image source
         section.images[0].src = tform_data["LOCAL_" + obj_name][section.name]["src"]  
         tform_data["FOCUS"] = "LOCAL_" + obj_name

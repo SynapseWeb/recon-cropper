@@ -50,9 +50,9 @@ def clearScreen():
     
 print("\nPlease ensure that Reconstruct is closed before running this program.")
 
-if os.path.isfile("save.json"):
+if os.path.isfile(os.path.dirname(__file__) + "/save.json"):
     # load previous working directory
-    with open("save.json", "r") as save_file:
+    with open(os.path.dirname(__file__) + "/save.json", "r") as save_file:
         save_data = json.load(save_file)
     series_dir = save_data["lastdir"]
     print("\nThe last folder you worked on is:")
@@ -66,7 +66,7 @@ if not keep_dir:
     print("\nPress enter to select the folder containing the series file.")
     input("(select an empty folder if you wish to create a new chunked series)")
     series_dir = findDir()
-original_dir = os.getcwd()
+
 os.chdir(series_dir)
 print("\nLocating series file...")
 series_found = False
@@ -211,7 +211,7 @@ while master_choice != "":
 # save the working directory
 print("\nSaving workspace data...")
 save_data["lastdir"] = os.getcwd()
-with open(original_dir + "/save.json", "w") as save_file:
+with open(os.path.dirname(__file__) + "/save.json", "w") as save_file:
     json.dump(save_data, save_file)
 print("Success!")
 
