@@ -116,15 +116,20 @@ class Transform(object):
     
     @property
     def dim(self):
-        xcheck = self.xcoef[3:6]
-        ycheck = self.ycoef[3:6]
-        for elem in xcheck:
-            if elem != 0:
-                return 6
-        for elem in ycheck:
-            if elem != 0:
-                return 6
-        return 3
+        if self.xcoef == [0,1,0,0,0,0] and self.ycoef == [0,0,1,0,0,0]:
+            return 0
+        elif self.xcoef[1:] == [1,0,0,0,0] and self.ycoef[1:] == [0,1,0,0,0]:
+            return 1
+        else:
+            xcheck = self.xcoef[3:]
+            ycheck = self.ycoef[3:]
+            for elem in xcheck:
+                if elem != 0:
+                    return 6
+            for elem in ycheck:
+                if elem != 0:
+                    return 6
+            return 3
 
 
     @property
@@ -140,7 +145,7 @@ class Transform(object):
     def __eq__(self, other):
         """ Allow use of == operator.
         """
-        to_compare = ["dim", "xcoef", "ycoef"]
+        to_compare = ["xcoef", "ycoef"]
         for k in to_compare:
             if getattr(self, k) != getattr(other, k):
                 return False
@@ -150,6 +155,19 @@ class Transform(object):
         """ Allow use of != operator.
         """
         return not self.__eq__(other)
+    
+    def isAffine(self):
+        """ Returns True if the transform is affine.
+        """
+        xcheck = self.xcoef[3:6]
+        ycheck = self.ycoef[3:6]
+        for elem in xcheck:
+            if elem != 0:
+                return False
+        for elem in ycheck:
+            if elem != 0:
+                return False
+        return True
     
     def compose(self, other):
         """ Compose two transforms.
@@ -189,68 +207,8 @@ class Transform(object):
             xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
             ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
             return Transform(xcoef=xcoef, ycoef=ycoef)
-    
-    def noTranslation(self):
-        if self.isAffine():
-            a = self._tform.params
-            a[0,2] = 0
-            a[1,2] = 0
-            a = np.linalg.inv(a)
-            xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
-            ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef)
-
-    def scaleTranslation(self, factor):
-        if self.isAffine():
-            tform = self._tform.params
-            tform[0,2] *= factor
-            tform[1,2] *= factor
-            a = np.linalg.inv(tform)
-            xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
-            ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef)
-
-    def translate(self, x, y, strict=False):
-        """ Return the transform translated by x, y.
-        If translation is strict, x and y are directly addd to transform.
-        If translation is not strict, x and y are transformed and then added.
-        """
-        if self.isAffine():
-            # use matrix if affine
-            tform = self._tform.params
-            tform[0,2] += x
-            tform[1,2] += y
-            a = np.linalg.inv(tform)
-            xcoef = [a[0,2], a[0,0], a[0,1], 0, 0, 0]
-            ycoef = [a[1,2], a[1,0], a[1,1], 0, 0, 0]
-            return Transform(xcoef=xcoef, ycoef=ycoef)
-
-
-##        else:
-##            # use polynomial transform if non-affine
-##            tform = self._tform.params
-##            tform[0,0] += x
-##            tform[1,0] += y
-##            new_tform = tf.PolynomialTransform(tform)
-##            inv_new_tform = invert_polynomial_transformation(new_tform)
-##            xcoef = list(inv_new_tform.params[0])
-##            ycoef = list(inv_new_tform.params[1])
-##            return Transform(xcoef=xcoef, ycoef=ycoef, dim=3)
 
     def transformPoints(self, points):
         """ Transform a list of points.
         """
         return self._tform(np.array(points))
-
-    def isAffine(self):
-        """ Returns True if the transform is affine.
-        """
-        xcheck = self.xcoef[3:6]
-        ycheck = self.ycoef[3:6]
-        for elem in xcheck:
-            if elem != 0:
-                return False
-        for elem in ycheck:
-            if elem != 0:
-                return False
-        return True

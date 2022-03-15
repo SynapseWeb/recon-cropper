@@ -20,7 +20,6 @@ def newJSON(series):
         json.dump(tform_data, new_file)
     return tform_data
 
-
 def readAll(series_dir):
     """ Import series and tform data.
     """

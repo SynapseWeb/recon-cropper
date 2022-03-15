@@ -49,7 +49,7 @@ def clearScreen():
         _ = os.system('clear')
     
 print("\nPlease ensure that Reconstruct is closed before running this program.")
-
+"""
 if os.path.isfile(os.path.dirname(__file__) + "/save.json"):
     # load previous working directory
     with open(os.path.dirname(__file__) + "/save.json", "r") as save_file:
@@ -61,6 +61,9 @@ if os.path.isfile(os.path.dirname(__file__) + "/save.json"):
 else:
     save_data = {}
     keep_dir = False
+"""
+
+keep_dir=False
 if not keep_dir:
     # prompt user to select series file
     print("\nPress enter to select the folder containing the series file.")
@@ -209,10 +212,12 @@ while master_choice != "":
         input("\nPress enter to return to the menu.")
 
 # save the working directory
+"""
 print("\nSaving workspace data...")
 save_data["lastdir"] = os.getcwd()
 with open(os.path.dirname(__file__) + "/save.json", "w") as save_file:
     json.dump(save_data, save_file)
 print("Success!")
+"""
 
 print("\nGoodbye! :)")

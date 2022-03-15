@@ -70,7 +70,6 @@ class Section(object):
             else:
                 contour.transform = tform.compose(contour.transform)
         
-
     def transformAllImages(self, tform, reverse=False):
         """Transform/translate all the images for a single section.
         """
