@@ -87,3 +87,9 @@
 
 -   [ ] Incorporate retro-reconstruct tools for dim 6 handling.
 
+# Updating Transformation Text Files
+
+-   LOCAL_TRANSFORMATION.txt files are now stored in the main working directory.
+    -   Go into each of the folders containing a crop and rename the file to (crop name)_LOCAL_TRANSFORMATIONS.txt
+        - Ex. 0,0_LOCAL_TRANSFORMATIONS.txt or d004_LOCAL_TRANSFORMATIONS.txt
+    -   Move the text file outside the crop folder and into the main working directory
