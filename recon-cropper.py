@@ -714,6 +714,8 @@ if missing:
 import numpy as np
 from PIL import Image as PILImage
 
+PILIMAGE.MAX_IMAGE_PIXELS = None  # Don't have hax image size
+
 if missing:
     print("\nModules successfully installed.")
 else:
